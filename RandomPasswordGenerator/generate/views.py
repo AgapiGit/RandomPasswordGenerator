@@ -1,32 +1,36 @@
 from django.shortcuts import render
-import os, random, string
+import random, string
 from random import shuffle
+
+from django.template.response import SimpleTemplateResponse
+from django.views.decorators.csrf import csrf_exempt
+
 
 # Create your views here.
 def RandomPasswordGenerator(request):
     return render(request, 'RandomPasswordGenerator.html', {})
-def GeneratedPassword(request):
-    return render(request, 'GeneratedPassword.html', {})
 
 
-
-total_nr_of_characters = int(input("Total nr of characters"))
-nr_of_digits = int(input("nr of digits"))
-nr_of_special_characters = int(input("nr of special characters"))
-if total_nr_of_characters < 8:
-        print("The minimum number of characters is 8")
-elif nr_of_digits + nr_of_special_characters < total_nr_of_characters:
-          pw = ''
-          for i in range(total_nr_of_characters - nr_of_digits - nr_of_special_characters):
-              pw += random.choice(string.ascii_letters)
-          for d in range(nr_of_digits):
+@csrf_exempt
+def generate_password(request):
+    result = ''
+    total_nr_of_characters = int(request.POST.get('total_nr_of_characters'))
+    nr_of_digits = int(request.POST.get('nr_of_digits'))
+    nr_of_special_characters = int(request.POST.get('nr_of_special_characters'))
+    if total_nr_of_characters < 8:
+        result = "The minimum number of characters is 8"
+    elif nr_of_digits + nr_of_special_characters < total_nr_of_characters:
+        pw = ''
+        for i in range(total_nr_of_characters - nr_of_digits - nr_of_special_characters):
+            pw += random.choice(string.ascii_letters)
+        for d in range(nr_of_digits):
             pw += random.choice(string.digits)
-          for s in range(nr_of_special_characters):
+        for s in range(nr_of_special_characters):
             pw += random.choice('!@#$%^&*()')
-          word = list(pw)
-          shuffle(word)
-          shuffle(word)
-          print (''.join(word))
-
-else: print("The number of digits plus the number of special characters must be smaller than the total number of characters")
-
+        password = list(pw)
+        shuffle(password)
+        shuffle(password)
+        result = ''.join(password)
+    else:
+        result = "The number of digits plus the number of special characters must be smaller than the total number of characters"
+    return SimpleTemplateResponse(template='GeneratedPassword.html', context={'password': result})
